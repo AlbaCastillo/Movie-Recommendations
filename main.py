@@ -23,17 +23,13 @@ async def load_data():
     # Creación de un vectorizador TF-IDF para la columna 'description'
     vectorizer = TfidfVectorizer(stop_words='english')
     tfidf_matrix = vectorizer.fit_transform(final_nn['description'])
-
     # Creamos un modelo para encontrar los vecinos mas cercanos
     nn = NearestNeighbors(metric='cosine', algorithm='auto')
     nn.fit(tfidf_matrix)
 
-
-
-
 @app.get('/')
 async def read_root():
-    return {'Mi primera API. Dirígite a .../docs'}
+    return {'API. Dirígite a .../docs'}
 
 @app.get('/about/')
 async def about():
@@ -64,6 +60,7 @@ def cantidad_filmaciones_mes(mes:str):
 
 @app.get('/cantidad_filmaciones_dia/{dia}')
 def cantidad_filmaciones_dia(dia:str):
+  '''Se ingresa un dia en ES, la funcion retorna la cantidad de peliculas que se estrenaron ese dia historicamente'''
   dia = dia.replace(" ", "").lower()
   dias = {'lunes': 'Monday', 'martes': 'Tuesday', 'miercoles': 'Wednesday', 'jueves': 'Thursday', 'viernes': 'Friday', 'sabado': 'Saturday', 'domingo': 'Sunday'}
   dia_en = dias.get(dia)
@@ -74,6 +71,7 @@ def cantidad_filmaciones_dia(dia:str):
 
 @app.get('/score_titulo/{titulo}')
 def score_titulo(titulo:str):
+  '''Se ingresa el titlo de una pelicula, la funcion devuelve el anio de estreno y la popularidad de la misma'''
   title = titulo.replace(" ", "").lower()
   movie_c = movies_final[movies_final['title'].str.replace(" ", "").str.lower().str.contains(title)].drop_duplicates(subset='id')
   if movie_c.empty:
@@ -85,6 +83,7 @@ def score_titulo(titulo:str):
 
 @app.get('/votos_titulo/{titulo}')
 def votos_titulo(titulo:str):
+  '''Se ingresa el titlo de una pelicula, la funcion devuelve el anio de estreno con los votos obtenidos'''
   title = titulo.replace(" ", "").lower()
   movie_c = movies_final[movies_final['title'].str.replace(" ", "").str.lower().str.contains(title)].drop_duplicates(subset='id')
   if movie_c.empty:
@@ -100,8 +99,9 @@ def votos_titulo(titulo:str):
 
 @app.get('/get_actor/{nombre_actor}')
 def get_actor(nombre_actor:str):
-  credits_final.dropna(subset=['cast_name'], inplace=True)
+  '''Se ingresa el nombre de un actor, la funcion devuelve la cantidad de peliculas que filmo y el retorno de las mismas'''
   actor = nombre_actor.replace(" ", "").lower()
+  credits_final.dropna(subset=['cast_name'], inplace=True)
   mask = credits_final['cast_name'].str.replace(" ", "").str.lower().str.contains(actor)
   # Filtrar el DataFrame para mostrar solo las filas donde se encontró el nombre
   filtered = credits_final[mask]
@@ -116,9 +116,9 @@ def get_actor(nombre_actor:str):
 
 @app.get('/get_director/{nombre_director}')
 def get_director(nombre_director:str):
-  # Elimina filas con valores faltantes en la columna "director"
-  credits_final.dropna(subset=['director'], inplace=True)
+  ''' Se ingresa el nombre del director, la funcion retorna el exito del mismo medido en retorno total, e individual por cada pelicula'''
   director = nombre_director.replace(" ", "").lower()
+  credits_final.dropna(subset=['director'], inplace=True)
   mask = credits_final['director'].str.replace(" ", "").str.lower().str.contains(director)
   # Filtrar el DataFrame para mostrar solo las filas donde se encontró el nombre
   filtered = credits_final[mask]
@@ -134,7 +134,7 @@ def get_director(nombre_director:str):
     'peliculas': str(movies), 'anio': str(year), 'retorno_pelicula': str(return_movie),
     'budget_pelicula': str(budget), 'revenue_pelicula': str(revenue)}
 
-@app.get('/recomendacion/{title}')
+@app.get('/recomendacion/{titulo}')
 def recomendacion(title:str):
     '''Ingresas un nombre de pelicula y te recomienda las similares en una lista'''
     title = title.replace(" ", "").lower()
@@ -142,6 +142,7 @@ def recomendacion(title:str):
     neighbors = nn.kneighbors(tfidf_matrix[movie_index], n_neighbors=6)
     # Obtener los índices de las películas más similares
     indices = neighbors[1][0]
+
     # Obtener los títulos de las películas más similares
     similar_movie_titles = final_nn.iloc[indices]['title']
     return {'lista recomendada': similar_movie_titles.tolist()}
