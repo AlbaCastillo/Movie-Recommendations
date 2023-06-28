@@ -21,6 +21,9 @@ Get_director: Se ingresa el nombre de un director y la función retorna el retor
 ## Recomendacion:
 Se ingresa el nombre de una película y el modelo retorna una lista con la pelicula y 5 películas similares más, a modo de recomendación
 
+## Render:
+https://movie-recommendations-and-information.onrender.com
+
 ## Herramientas usadas:
 Python -
 Sckit-learn -
